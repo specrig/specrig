@@ -1,6 +1,6 @@
 {
   "name": "specrig",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Rule #11 modes for every specrig service: the human switches the mode, a hook checks every edit against the service's rules and refuses what the mode does not allow",
   "author": {
     "name": "specrig"
