@@ -1,0 +1,112 @@
+specrig: guard-fixtures/1
+
+# A service in a monorepo, laid out as waffle lays one out: its contracts are
+# shared, and its waffle.yaml makes the rest of shared/ areas.
+root: /repo/services/svc
+layout:
+  platform: [waffle.yaml, tests/internal/]
+  cases: [tests/feature/**/*.feature]
+  tests: [tests/]
+areas:
+  - name: gomod
+    paths: [go.mod, go.sum]
+    modes: [platform]
+    grant: [redgreen]
+  - name: steps
+    paths: [tests/*_test.go]
+    grant: [platform]
+  - name: proto
+    paths: [../../shared/api/proto/]
+    modes: [spec, platform]
+  - name: events
+    paths: [../../shared/api/events/]
+    modes: [spec, platform]
+  - name: shared
+    paths: [../../shared/pkg/]
+    modes: [platform]
+  - name: pb
+    paths: [../../shared/api/pb/]
+    modes: []
+
+checks:
+  - {mode: none, path: domain/price/service/quote.go, verdict: allowed}
+  - {mode: spec, path: domain/price/service/quote.go, verdict: refused, ways: [redgreen mode, platform mode]}
+  - {mode: redgreen, path: domain/price/service/quote.go, verdict: allowed}
+  - {mode: platform, path: domain/price/service/quote.go, verdict: allowed}
+
+  - {mode: none, path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: spec, path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: redgreen, path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: platform, path: waffle.yaml, verdict: allowed}
+
+  - {mode: none, path: tests/internal/harness/harness.go, verdict: refused, ways: [platform mode]}
+  - {mode: redgreen, path: tests/internal/harness/harness.go, verdict: refused, ways: [platform mode]}
+  - {mode: platform, path: tests/internal/harness/harness.go, verdict: allowed}
+
+  - {mode: none, path: tests/feature/quote.feature, verdict: refused, ways: [spec mode]}
+  - {mode: spec, path: tests/feature/quote.feature, verdict: allowed}
+  - {mode: redgreen, path: tests/feature/quote.feature, verdict: refused, ways: [spec mode]}
+  - {mode: platform, path: tests/feature/quote.feature, verdict: refused, ways: [spec mode]}
+
+  - {mode: none, path: tests/steps_test.go, verdict: allowed}
+  - {mode: spec, path: tests/steps_test.go, verdict: refused, ways: [redgreen mode, the steps grant in platform mode]}
+  - {mode: redgreen, path: tests/steps_test.go, verdict: allowed}
+  - {mode: platform, path: tests/steps_test.go, verdict: refused, ways: [redgreen mode, the steps grant in platform mode]}
+
+  - {mode: none, path: CONTRIBUTING.md, verdict: refused, ways: []}
+  - {mode: spec, path: CONTRIBUTING.md, verdict: refused, ways: []}
+  - {mode: redgreen, path: CONTRIBUTING.md, verdict: refused, ways: []}
+  - {mode: platform, path: CONTRIBUTING.md, verdict: refused, ways: []}
+
+  - {mode: none, path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in redgreen mode]}
+  - {mode: spec, path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in redgreen mode]}
+  - {mode: redgreen, path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in redgreen mode]}
+  - {mode: platform, path: go.mod, verdict: allowed}
+
+  - {mode: none, path: ../../shared/api/events/price.go, verdict: refused, ways: [spec mode, platform mode]}
+  - {mode: spec, path: ../../shared/api/events/price.go, verdict: allowed}
+  - {mode: redgreen, path: ../../shared/api/events/price.go, verdict: refused, ways: [spec mode, platform mode]}
+  - {mode: platform, path: ../../shared/api/events/price.go, verdict: allowed}
+
+  - {mode: spec, path: ../../shared/pkg/money/money.go, verdict: refused, ways: [platform mode]}
+  - {mode: redgreen, path: ../../shared/pkg/money/money.go, verdict: refused, ways: [platform mode]}
+  - {mode: platform, path: ../../shared/pkg/money/money.go, verdict: allowed}
+
+  - {mode: spec, path: ../../shared/api/pb/price/service.pb.go, verdict: refused, ways: []}
+  - {mode: platform, path: ../../shared/api/pb/price/service.pb.go, verdict: refused, ways: []}
+
+  - {mode: none, path: ../../shared/api/proto/price/service.proto, verdict: refused, ways: [spec mode, platform mode]}
+  - {mode: spec, path: ../../shared/api/proto/price/service.proto, verdict: allowed}
+  - {mode: redgreen, path: ../../shared/api/proto/price/service.proto, verdict: refused, ways: [spec mode, platform mode]}
+  - {mode: platform, path: ../../shared/api/proto/price/service.proto, verdict: allowed}
+
+  # A grant opens its area only in the modes it is granted in, and nothing else.
+  - {mode: redgreen, grants: [gomod], path: go.mod, verdict: allowed}
+  - {mode: redgreen, grants: [gomod], path: go.sum, verdict: allowed}
+  - {mode: spec, grants: [gomod], path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in redgreen mode]}
+  - {mode: redgreen, grants: [gomod], path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: redgreen, grants: [events], path: ../../shared/api/events/price.go, verdict: refused, ways: [spec mode, platform mode]}
+  - {mode: platform, grants: [steps], path: tests/steps_test.go, verdict: allowed}
+  - {mode: platform, grants: [steps], path: tests/feature/quote.feature, verdict: refused, ways: [spec mode]}
+  - {mode: platform, grants: [steps], path: tests/internal/fakes/fakes_test.go, verdict: allowed}
+  - {mode: spec, grants: [steps], path: tests/steps_test.go, verdict: refused, ways: [redgreen mode, the steps grant in platform mode]}
+
+  - {mode: auto, path: domain/price/service/quote.go, verdict: allowed}
+  - {mode: auto, path: tests/feature/quote.feature, verdict: allowed}
+  - {mode: auto, path: tests/steps_test.go, verdict: allowed}
+  - {mode: auto, path: ../../shared/api/events/price.go, verdict: allowed}
+  - {mode: auto, path: ../../shared/api/proto/price/service.proto, verdict: allowed}
+  - {mode: auto, path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: auto, path: ../../shared/pkg/money/money.go, verdict: refused, ways: [platform mode]}
+  - {mode: auto, path: ../../shared/api/pb/price/service.pb.go, verdict: refused, ways: []}
+  - {mode: auto, path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in auto mode]}
+  - {mode: auto, grants: [gomod], path: go.mod, verdict: allowed}
+
+  # Outside the service, a path no area names is not this service's to decide.
+  - {mode: spec, path: /repo/docs/readme.md, verdict: unclaimed}
+  - {mode: spec, path: ../../shared/api/protobuf/x.go, verdict: unclaimed}
+
+  # An area claims its own directory, with or without the slash.
+  - {mode: spec, path: ../../shared/api/proto, verdict: allowed}
+  - {mode: spec, path: ../../shared/api/proto/, verdict: allowed}
+  - {mode: spec, path: ../../shared/api/events, verdict: allowed}

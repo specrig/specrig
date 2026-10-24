@@ -1,0 +1,62 @@
+specrig: guard-fixtures/1
+
+# A service laid out as specrig's tools lay one out: records generate writes, a
+# record the suite writes with descriptions by hand, the cases at any depth.
+root: /work/shop
+layout:
+  generated: [tests/surface.yaml, tests/checks.yaml]
+  platform: [tests/internal/, tests/Specs.csproj, specrig.yaml, Makefile, AGENTS.md, CLAUDE.md]
+  cases: [tests/feature/**/*.feature]
+  tests: [tests/]
+areas:
+  - name: csproj
+    paths: [tests/Specs.csproj]
+    modes: [platform]
+    grant: [redgreen]
+  - name: flows
+    paths: [tests/flows.yaml]
+    modes: [none, spec, redgreen, platform]
+  - name: steps
+    paths: [tests/steps/]
+    grant: [platform]
+
+checks:
+  - {mode: spec, path: tests/feature/pay.feature, verdict: allowed}
+  - {mode: spec, path: tests/feature/orders/pay.feature, verdict: allowed}
+  - {mode: redgreen, path: tests/feature/orders/pay.feature, verdict: refused, ways: [spec mode]}
+  - {mode: none, path: tests/feature/notes.md, verdict: allowed}
+  - {mode: spec, path: tests/feature/notes.md, verdict: refused, ways: [redgreen mode]}
+
+  - {mode: platform, path: tests/surface.yaml, verdict: refused, ways: []}
+  - {mode: redgreen, path: tests/checks.yaml, verdict: refused, ways: []}
+  - {mode: none, path: specrig.md, verdict: refused, ways: []}
+  - {mode: platform, path: specrig.md, verdict: refused, ways: []}
+
+  - {mode: spec, path: tests/flows.yaml, verdict: allowed}
+  - {mode: redgreen, path: tests/flows.yaml, verdict: allowed}
+
+  - {mode: redgreen, path: tests/Specs.csproj, verdict: refused, ways: [platform mode, the csproj grant in redgreen mode]}
+  - {mode: redgreen, grants: [csproj], path: tests/Specs.csproj, verdict: allowed}
+  - {mode: platform, path: tests/Specs.csproj, verdict: allowed}
+
+  - {mode: redgreen, path: tests/steps/OrderSteps.cs, verdict: allowed}
+  - {mode: platform, path: tests/steps/OrderSteps.cs, verdict: refused, ways: [redgreen mode, the steps grant in platform mode]}
+  - {mode: platform, grants: [steps], path: tests/steps/OrderSteps.cs, verdict: allowed}
+
+  - {mode: none, path: src/Orders.cs, verdict: allowed}
+  - {mode: spec, path: src/Orders.cs, verdict: refused, ways: [redgreen mode, platform mode]}
+  - {mode: platform, path: tests/internal/Harness.cs, verdict: allowed}
+  - {mode: none, path: specrig.yaml, verdict: refused, ways: [platform mode]}
+
+  - {mode: none, path: CONTRIBUTING.md, verdict: refused, ways: []}
+  - {mode: redgreen, path: ../docs/billing.yaml, verdict: unclaimed}
+
+  - {mode: auto, path: tests/feature/orders/pay.feature, verdict: allowed}
+  - {mode: auto, path: tests/steps/OrderSteps.cs, verdict: allowed}
+  - {mode: auto, path: src/Orders.cs, verdict: allowed}
+  - {mode: auto, path: tests/flows.yaml, verdict: allowed}
+  - {mode: auto, path: tests/internal/Harness.cs, verdict: refused, ways: [platform mode]}
+  - {mode: auto, path: tests/Specs.csproj, verdict: refused, ways: [platform mode, the csproj grant in auto mode]}
+  - {mode: auto, grants: [csproj], path: tests/Specs.csproj, verdict: allowed}
+  - {mode: auto, path: specrig.md, verdict: refused, ways: []}
+  - {mode: auto, path: CONTRIBUTING.md, verdict: refused, ways: []}

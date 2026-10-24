@@ -1,0 +1,26 @@
+specrig: guard-fixtures/1
+
+# A service on its own, its contract inside it, and an area over all of api/.
+root: /svc
+layout:
+  platform: [waffle.yaml, tests/internal/]
+  cases: [tests/feature/**/*.feature]
+  tests: [tests/]
+areas:
+  - name: proto
+    paths: [api/proto/]
+    modes: [spec, platform]
+  - name: api
+    paths: [api/]
+    modes: [platform]
+
+checks:
+  # The contract is spec's to change even inside the service.
+  - {mode: spec, path: api/proto/price/service.proto, verdict: allowed}
+  - {mode: platform, path: api/proto/price/service.proto, verdict: allowed}
+  - {mode: redgreen, path: api/proto/price/service.proto, verdict: refused, ways: [spec mode, platform mode]}
+  - {mode: none, path: api/proto/price/service.proto, verdict: refused, ways: [spec mode, platform mode]}
+
+  # The area naming more of the path before its first wildcard decides.
+  - {mode: spec, path: api/openapi.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: platform, path: api/openapi.yaml, verdict: allowed}

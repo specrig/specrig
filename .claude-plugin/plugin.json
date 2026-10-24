@@ -1,0 +1,12 @@
+{
+  "name": "specrig",
+  "version": "0.1.0",
+  "description": "Rule #11 modes for every specrig and waffle service: the human switches the mode, a hook checks every edit against the service's rules and refuses what the mode does not allow",
+  "author": {
+    "name": "specrig"
+  },
+  "repository": "https://github.com/specrig/specrig",
+  "license": "MIT",
+  "hooks": "./claude/hooks.json",
+  "skills": ["./claude/skills/"]
+}
