@@ -60,8 +60,8 @@ func (s state) modeOf(svc string) string {
 
 func (h hook) sessionStart(in input) string {
 	var b strings.Builder
-	b.WriteString("specrig plugin active: Rule #11 modes are enforced for every service a marker names — " +
-		"specrig.yaml or waffle.yaml. An edit the mode does not allow is refused, naming the mode or grant that would allow it. " +
+	b.WriteString("specrig plugin active: Rule #11 modes are enforced for every service a specrig.yaml marks. " +
+		"An edit the mode does not allow is refused, naming the mode or grant that would allow it. " +
 		"Only the human switches the mode, by typing /specrig:<mode> [./path/to/service…], " +
 		"and only the human grants an area, by typing /specrig:allow <area>; nothing you run does either.\n")
 	st := h.load(in.SessionID)

@@ -10,16 +10,12 @@ import (
 	"strings"
 )
 
-// A directory holding one of these is a service, and its tool answers for it.
-var markers = []string{"specrig.yaml", "waffle.yaml"}
+// A directory holding it is a service, and the tool it names answers for it.
+const marker = "specrig.yaml"
 
 func Marked(dir string) bool {
-	for _, m := range markers {
-		if _, err := os.Stat(filepath.Join(dir, m)); err == nil {
-			return true
-		}
-	}
-	return false
+	_, err := os.Stat(filepath.Join(dir, marker))
+	return err == nil
 }
 
 // Of walks up from dir, which may not exist yet, to the nearest directory holding

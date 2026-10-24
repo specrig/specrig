@@ -10,7 +10,7 @@ import (
 	"github.com/specrig/specrig/service"
 )
 
-// A monorepo with a waffle service and a specrig one, and a guard stand-in that
+// A monorepo with two services, and a guard stand-in that
 // answers as the test says and records what it was asked. Unless the test gives
 // rules, the stand-in predates them.
 type fixture struct {
@@ -24,12 +24,12 @@ func newFixture(t *testing.T, answer func(args []string) (string, error)) *fixtu
 	t.Helper()
 	root := t.TempDir()
 	f := &fixture{root: service.Resolve(root)}
-	for name, marker := range map[string]string{"kostej": "waffle.yaml", "shark": "specrig.yaml"} {
+	for _, name := range []string{"kostej", "shark"} {
 		dir := filepath.Join(root, "services", name)
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(filepath.Join(dir, marker), nil, 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "specrig.yaml"), nil, 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -87,7 +87,7 @@ func TestPromptTakesAServiceOnlyByItsPath(t *testing.T) {
 
 func TestPromptLeavesOtherTextAlone(t *testing.T) {
 	f := newFixture(t, allowing)
-	for _, text := range []string{"please fix specrig.yaml", "/waffle:spec ./services/kostej"} {
+	for _, text := range []string{"please fix specrig.yaml", "/other:spec ./services/kostej"} {
 		if out := f.prompt(text); out != "" || len(f.calls) != 0 {
 			t.Errorf("%q produced %q and %d guard calls", text, out, len(f.calls))
 		}

@@ -1,10 +1,10 @@
 specrig: guard-fixtures/1
 
-# A service in a monorepo, laid out as waffle lays one out: its contracts are
-# shared, and its waffle.yaml makes the rest of shared/ areas.
+# A service in a monorepo: its contracts are shared, and its specrig.yaml makes
+# the rest of shared/ areas.
 root: /repo/services/svc
 layout:
-  platform: [waffle.yaml, tests/internal/]
+  platform: [specrig.yaml, tests/internal/]
   cases: [tests/feature/**/*.feature]
   tests: [tests/]
 areas:
@@ -33,9 +33,9 @@ checks:
   - {mode: redgreen, path: domain/price/service/quote.go, verdict: allowed}
   - {mode: platform, path: domain/price/service/quote.go, verdict: allowed}
 
-  - {mode: spec, path: waffle.yaml, verdict: refused, ways: [platform mode]}
-  - {mode: redgreen, path: waffle.yaml, verdict: refused, ways: [platform mode]}
-  - {mode: platform, path: waffle.yaml, verdict: allowed}
+  - {mode: spec, path: specrig.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: redgreen, path: specrig.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: platform, path: specrig.yaml, verdict: allowed}
 
   - {mode: redgreen, path: tests/internal/harness/harness.go, verdict: refused, ways: [platform mode]}
   - {mode: platform, path: tests/internal/harness/harness.go, verdict: allowed}
@@ -75,7 +75,7 @@ checks:
   - {mode: redgreen, grants: [gomod], path: go.mod, verdict: allowed}
   - {mode: redgreen, grants: [gomod], path: go.sum, verdict: allowed}
   - {mode: spec, grants: [gomod], path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in redgreen mode]}
-  - {mode: redgreen, grants: [gomod], path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: redgreen, grants: [gomod], path: specrig.yaml, verdict: refused, ways: [platform mode]}
   - {mode: redgreen, grants: [events], path: ../../shared/api/events/price.go, verdict: refused, ways: [spec mode, platform mode]}
   - {mode: platform, grants: [steps], path: tests/steps_test.go, verdict: allowed}
   - {mode: platform, grants: [steps], path: tests/feature/quote.feature, verdict: refused, ways: [spec mode]}
@@ -87,7 +87,7 @@ checks:
   - {mode: auto, path: tests/steps_test.go, verdict: allowed}
   - {mode: auto, path: ../../shared/api/events/price.go, verdict: allowed}
   - {mode: auto, path: ../../shared/api/proto/price/service.proto, verdict: allowed}
-  - {mode: auto, path: waffle.yaml, verdict: refused, ways: [platform mode]}
+  - {mode: auto, path: specrig.yaml, verdict: refused, ways: [platform mode]}
   - {mode: auto, path: ../../shared/pkg/money/money.go, verdict: refused, ways: [platform mode]}
   - {mode: auto, path: ../../shared/api/pb/price/service.pb.go, verdict: refused, ways: []}
   - {mode: auto, path: go.mod, verdict: refused, ways: [platform mode, the gomod grant in auto mode]}

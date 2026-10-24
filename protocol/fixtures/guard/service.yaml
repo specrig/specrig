@@ -3,7 +3,7 @@ specrig: guard-fixtures/1
 # A service on its own, its contract inside it, and an area over all of api/.
 root: /svc
 layout:
-  platform: [waffle.yaml, tests/internal/]
+  platform: [specrig.yaml, tests/internal/]
   cases: [tests/feature/**/*.feature]
   tests: [tests/]
 areas:

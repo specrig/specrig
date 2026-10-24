@@ -28,33 +28,23 @@ func Tool(dir string, args ...string) (string, error) {
 	return strings.TrimSpace(out.String()), err
 }
 
-type noGuard struct{ command, marker string }
+type noGuard struct{ command string }
 
 // Worded as a guard that predates the command, which a service with none is.
 func (e noGuard) Error() string {
-	return fmt.Sprintf("Unknown command %q: %s names no guard", e.command, e.marker)
+	return fmt.Sprintf("Unknown command %q: %s names no guard", e.command, marker)
 }
 
-// WAFFLE_BIN points every waffle service at one binary, for trying a waffle that
-// is not released yet.
 func toolOf(dir, command string) ([]string, error) {
-	if body, err := os.ReadFile(filepath.Join(dir, "specrig.yaml")); err == nil {
-		if argv := guardIn(string(body)); len(argv) > 0 {
-			return append(argv, command), nil
-		}
-		if _, err := os.Stat(filepath.Join(dir, "waffle.yaml")); err != nil {
-			return nil, noGuard{command, "specrig.yaml"}
-		}
+	body, err := os.ReadFile(filepath.Join(dir, marker))
+	if err != nil {
+		return nil, err
 	}
-	waffle := "agents:" + command
-	switch script := filepath.Join(dir, "waffle"); {
-	case os.Getenv("WAFFLE_BIN") != "":
-		return []string{os.Getenv("WAFFLE_BIN"), waffle}, nil
-	case executable(script):
-		return []string{script, waffle}, nil
-	default:
-		return []string{"go", "tool", "waffle", waffle}, nil
+	argv := guardIn(string(body))
+	if len(argv) == 0 {
+		return nil, noGuard{command}
 	}
+	return append(argv, command), nil
 }
 
 // guardIn reads the top-level guard key of specrig.yaml: a flow list, a block
@@ -105,11 +95,6 @@ func unquote(s string) string {
 		return s[1 : len(s)-1]
 	}
 	return s
-}
-
-func executable(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && !info.IsDir() && info.Mode()&0o111 != 0
 }
 
 type Verdict int

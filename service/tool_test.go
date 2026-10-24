@@ -34,22 +34,13 @@ func TestTheMarkerNamesTheGuard(t *testing.T) {
 	}
 }
 
-func TestEachMarkerIsAskedInItsOwnWords(t *testing.T) {
+func TestTheToolTheMarkerNamesIsAsked(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.WriteFile(filepath.Join(dir, "specrig.yaml"), []byte("guard: [dotnet, specrig]\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if argv, err := toolOf(dir, "rules"); err != nil || !slices.Equal(argv, []string{"dotnet", "specrig", "rules"}) {
 		t.Errorf("specrig.yaml: %q, %v", argv, err)
-	}
-
-	waffle := t.TempDir()
-	if err := os.WriteFile(filepath.Join(waffle, "waffle.yaml"), nil, 0o644); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("WAFFLE_BIN", "")
-	if argv, err := toolOf(waffle, "mode"); err != nil || !slices.Equal(argv, []string{"go", "tool", "waffle", "agents:mode"}) {
-		t.Errorf("waffle.yaml: %q, %v", argv, err)
 	}
 
 	bare := t.TempDir()

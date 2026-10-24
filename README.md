@@ -1,8 +1,8 @@
 # specrig
 
 The Claude Code plugin of [specrig](https://github.com/specrig/protocol): it
-enforces Rule #11's modes for every service a marker names — `specrig.yaml` or
-`waffle.yaml` — whatever its stack.
+enforces Rule #11's modes for every service a `specrig.yaml` marks, whatever its
+stack.
 
 | | what |
 |---|---|
@@ -46,15 +46,13 @@ checks every edit against them itself.
 |---|---|
 | `specrig.yaml` with `guard: [dotnet, specrig]` | `dotnet specrig rules` |
 | `specrig.yaml` with `guard: [npx, --no, specrig]` | `npx --no specrig rules` |
-| `waffle.yaml` | `./waffle agents:rules`, or `go tool waffle agents:rules` |
+| `specrig.yaml` with `guard: [go, tool, specrig]` | `go tool specrig rules` |
 
 A tool older than `rules` is asked `guard <mode> <path>` on every edit instead, and
 `mode` and `grant` when the human switches. A marker the tool refuses keeps every
 edit in the service refused, save the marker itself in platform mode, where it is
-fixed. A service whose tool has no modes yet,
-or does not run, stays editable, and the plugin says so once. The plugin supersedes
-waffle's own, which enforces the same table for waffle services alone: enable one of
-the two, not both.
+fixed. A service whose tool has no modes yet, or does not run, stays editable, and
+the plugin says so once.
 
 **No Go needed.** The hook is a Go program. Where Go is installed the plugin builds
 it on first use; where it is not, it fetches the binary for the platform from the

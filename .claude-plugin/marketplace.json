@@ -8,7 +8,7 @@
     {
       "name": "specrig",
       "source": "./",
-      "description": "Rule #11 modes for every specrig and waffle service: the human switches the mode, a hook checks every edit against the service's rules and refuses what the mode does not allow"
+      "description": "Rule #11 modes for every specrig service: the human switches the mode, a hook checks every edit against the service's rules and refuses what the mode does not allow"
     }
   ]
 }
