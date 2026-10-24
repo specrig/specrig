@@ -30,11 +30,13 @@ For everyone on a project, in the repository root's `.claude/settings.json`:
 
 ## Modes
 
-The human switches with `/specrig:spec`, `/specrig:redgreen`, `/specrig:platform`
-and `/specrig:none`, or with `/specrig:auto` for the whole cycle without a stop,
-naming the services by path — `./services/shop`, or `./...` for every service below
-a directory — and grants an area with `/specrig:allow <area>`. One mode holds for
-every service the task names, and a service it does not name is closed whole.
+Every service is in redgreen until the human switches with `/specrig:spec`,
+`/specrig:redgreen` or `/specrig:platform`, or with `/specrig:auto` for the whole
+cycle without a stop, naming the services by path — `./services/shop`, or `./...`
+for every service below a directory — and grants an area with
+`/specrig:allow <area>`. One mode holds for every service the task names, and a
+service it does not name is closed whole for the rest of the session, or until a
+command names it.
 
 The rules come from the tool version the service depends on: the hook asks the tool
 the marker names for them once a session, and again when the marker changes, and
@@ -47,7 +49,9 @@ checks every edit against them itself.
 | `waffle.yaml` | `./waffle agents:rules`, or `go tool waffle agents:rules` |
 
 A tool older than `rules` is asked `guard <mode> <path>` on every edit instead, and
-`mode` and `grant` when the human switches. A service whose tool has no modes yet,
+`mode` and `grant` when the human switches. A marker the tool refuses keeps every
+edit in the service refused, save the marker itself in platform mode, where it is
+fixed. A service whose tool has no modes yet,
 or does not run, stays editable, and the plugin says so once. The plugin supersedes
 waffle's own, which enforces the same table for waffle services alone: enable one of
 the two, not both.

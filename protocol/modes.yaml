@@ -19,13 +19,6 @@ classes:
     what: everything else in the service
 
 modes:
-  - name: none
-    opens: [tests, production]
-    offered: false
-    allows: anything but the cases and the platform's files
-    brief: >-
-      No mode is on. Everything but the cases and the platform's files may be
-      edited; a Rule #11 task has not started, and a case changes only in spec mode.
   - name: spec
     opens: [cases]
     allows: "{{cases}}"
@@ -37,10 +30,11 @@ modes:
     opens: [tests, production]
     allows: the steps and production code — anything but the cases and the platform's files
     brief: >-
-      Rule #11 step 3: "Red-green" and "Changing an approved specification". The
-      specification was approved by switching to this mode and is frozen: a
-      correction to a case is a return to spec mode. Bind the cases and run them
-      red, then make them green, stop.
+      Rule #11 step 3: "Red-green" and "Changing an approved specification", and
+      where every service is until the human switches a mode. Switched to from spec
+      mode, it is the approval: the specification is frozen, and a correction to a
+      case is a return to spec mode. Bind the cases and run them red, then make
+      them green, stop.
   - name: platform
     opens: [platform, production]
     allows: the platform's files, and production code for a seam
@@ -54,7 +48,8 @@ modes:
     offered: false
     allows: "{{cases}}, the steps and production code — anything but the platform's files"
     brief: >-
-      Auto mode: the whole cycle without a stop, for a human who reviews it all at
-      once. The order holds — the cases and the delta list, the steps, the red run,
+      Auto mode: the whole cycle without a stop, for a human who would rather not
+      switch modes but wants the work done specification first, and reviews it all
+      at once. The order holds — the cases and the delta list, the steps, the red run,
       the code — and each step is left by you, not by a switch. Hand over at the end
       what each stop would have shown (Rule #11, Auto mode), stop.

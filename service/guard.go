@@ -27,9 +27,18 @@ type kept struct {
 	Rules  *guard.Document `json:"rules,omitempty"`
 }
 
+// The mode a marker the tool refuses is fixed in, the protocol's name for it.
+const fixing = "platform"
+
 func (g Guard) Check(svc, mode, path string, granted []string) (Verdict, string) {
 	r, v, text := g.rules(svc)
 	if r == nil {
+		if v == Refused {
+			if mode == fixing && filepath.Join(Resolve(filepath.Dir(path)), filepath.Base(path)) == filepath.Join(svc, markerOf(svc)) {
+				return OK, ""
+			}
+			return Refused, unheld(svc, text) + " — stop and ask the human for it"
+		}
 		if v != OK {
 			return v, text
 		}
@@ -58,6 +67,12 @@ func (g Guard) Check(svc, mode, path string, granted []string) (Verdict, string)
 func (g Guard) Mode(svc, mode string) (Verdict, string) {
 	r, v, text := g.rules(svc)
 	if r == nil {
+		if v == Refused && mode == fixing {
+			return OK, fmt.Sprintf("Mode: %s\n%s.\nMay be edited: %s, until it holds.", fixing, unheld(svc, text), markerOf(svc))
+		}
+		if v == Refused {
+			return Refused, unheld(svc, text)
+		}
 		if v != OK {
 			return v, text
 		}
@@ -74,6 +89,9 @@ func (g Guard) Mode(svc, mode string) (Verdict, string) {
 func (g Guard) Grant(svc, mode, area string) (Verdict, string) {
 	r, v, text := g.rules(svc)
 	if r == nil {
+		if v == Refused {
+			return Refused, unheld(svc, text)
+		}
 		if v != OK {
 			return v, text
 		}
@@ -125,6 +143,20 @@ func (g Guard) rules(svc string) (*guard.Rules, Verdict, string) {
 		return nil, Broken, "rules: " + err.Error()
 	}
 	return &r, OK, ""
+}
+
+func unheld(svc, reason string) string {
+	return fmt.Sprintf("%s does not hold (%s): nothing else in the service is edited until it does, and it is fixed in %s mode",
+		markerOf(svc), reason, fixing)
+}
+
+func markerOf(svc string) string {
+	for _, m := range markers {
+		if _, err := os.Stat(filepath.Join(svc, m)); err == nil {
+			return m
+		}
+	}
+	return markers[0]
 }
 
 // The tool's launcher may print before it — a build, a download.

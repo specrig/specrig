@@ -13,14 +13,12 @@ import (
 
 func printed(t *testing.T) string {
 	t.Helper()
-	hidden := false
 	body, err := json.Marshal(guard.Document{
 		Specrig: "rules/1",
 		Classes: []guard.Class{{Name: "humans", Patterns: []string{"CONTRIBUTING.md"}}, {Name: "generated", Patterns: []string{"specrig.md"}},
 			{Name: "platform", Patterns: []string{"specrig.yaml"}}, {Name: "cases", Patterns: []string{"tests/feature/**/*.feature"}},
 			{Name: "tests", Patterns: []string{"tests/"}}, {Name: "production"}},
 		Modes: []guard.Mode{
-			{Name: "none", Opens: []string{"tests", "production"}, Offered: &hidden},
 			{Name: "spec", Opens: []string{"cases"}, Allows: "`tests/feature/**/*.feature`", Brief: "Write the cases."},
 			{Name: "redgreen", Opens: []string{"tests", "production"}},
 			{Name: "platform", Opens: []string{"platform", "production"}},
@@ -162,11 +160,34 @@ func TestAToolRefusingItsRulesRefusesEveryEdit(t *testing.T) {
 		return "Error: specrig.yaml: agents.areas.deps names no paths", errors.New("exit status 1")
 	})
 	for range 2 {
-		if v, text := f.g.Check(f.svc, "redgreen", f.path("src/a.ts"), nil); v != Refused || text != "specrig.yaml: agents.areas.deps names no paths" {
+		if v, text := f.g.Check(f.svc, "redgreen", f.path("src/a.ts"), nil); v != Refused ||
+			!strings.HasPrefix(text, "specrig.yaml does not hold (specrig.yaml: agents.areas.deps names no paths)") {
 			t.Errorf("%v %q", v, text)
 		}
 	}
 	if f.asked("rules") != 2 {
 		t.Errorf("calls %q", f.calls)
+	}
+}
+
+// Otherwise nothing could fix it: platform mode is where the marker is edited, and
+// a marker that does not hold names no modes to switch to.
+func TestAMarkerTheToolRefusesIsFixedInPlatformModeAlone(t *testing.T) {
+	f := newFixture(t, func([]string) (string, error) {
+		return "Error: specrig.yaml: agents.areas.deps names no paths", errors.New("exit status 1")
+	})
+	if v, text := f.g.Mode(f.svc, "platform"); v != OK || !strings.Contains(text, "May be edited: specrig.yaml, until it holds.") {
+		t.Errorf("switching to platform: %v %q", v, text)
+	}
+	if v, _ := f.g.Mode(f.svc, "spec"); v != Refused {
+		t.Errorf("switching to spec: %v", v)
+	}
+	if v, _ := f.g.Check(f.svc, "platform", f.path("specrig.yaml"), nil); v != OK {
+		t.Errorf("the marker in platform mode: %v", v)
+	}
+	for mode, path := range map[string]string{"platform": "tests/internal/harness.ts", "redgreen": "specrig.yaml"} {
+		if v, _ := f.g.Check(f.svc, mode, f.path(path), nil); v != Refused {
+			t.Errorf("%s in %s mode: %v", path, mode, v)
+		}
 	}
 }

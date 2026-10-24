@@ -13,13 +13,21 @@ areas:
   - name: api
     paths: [api/]
     modes: [platform]
+  - name: deps
+    paths: [go.mod]
+    modes: [platform]
+    grant: [redgreen, auto]
 
 checks:
+  # auto takes the redgreen grant as its own, the way is named once, and only while auto is on.
+  - {mode: auto, path: go.mod, verdict: refused, ways: [platform mode, the deps grant in auto mode]}
+  - {mode: auto, path: go.mod, grants: [deps], verdict: allowed}
+  - {mode: spec, path: go.mod, verdict: refused, ways: [platform mode, the deps grant in redgreen mode]}
+
   # The contract is spec's to change even inside the service.
   - {mode: spec, path: api/proto/price/service.proto, verdict: allowed}
   - {mode: platform, path: api/proto/price/service.proto, verdict: allowed}
   - {mode: redgreen, path: api/proto/price/service.proto, verdict: refused, ways: [spec mode, platform mode]}
-  - {mode: none, path: api/proto/price/service.proto, verdict: refused, ways: [spec mode, platform mode]}
 
   # The area naming more of the path before its first wildcard decides.
   - {mode: spec, path: api/openapi.yaml, verdict: refused, ways: [platform mode]}

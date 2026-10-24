@@ -67,7 +67,7 @@ func TestPromptSwitchesTheServiceNamedByItsPath(t *testing.T) {
 	out := f.prompt("/specrig:spec ./services/kostej PROJ-1 fix the layout")
 
 	st := f.h.load("s1")
-	if st.Mode != "spec" || st.modeOf(f.svc) != "spec" || st.modeOf(f.other) != none {
+	if st.Mode != "spec" || st.modeOf(f.svc) != "spec" || st.modeOf(f.other) != unswitched {
 		t.Errorf("state %+v", st)
 	}
 	if !strings.Contains(out, "switched to spec mode, for services/kostej") || !strings.Contains(out, "brief of spec") {
@@ -105,7 +105,6 @@ func TestPromptWithNoServiceSwitchesNothing(t *testing.T) {
 func TestACommandWithoutAPathActsOnTheServicesNamedBefore(t *testing.T) {
 	f := newFixture(t, allowing)
 	f.prompt("/specrig:spec ./services/kostej ./services/shark")
-	f.prompt("/specrig:none")
 	f.prompt("/specrig:redgreen")
 	st := f.h.load("s1")
 	if st.modeOf(f.svc) != "redgreen" || st.modeOf(f.other) != "redgreen" {
@@ -118,7 +117,7 @@ func TestNamingFewerServicesResetsTheRest(t *testing.T) {
 	f.prompt("/specrig:spec ./services/kostej ./services/shark")
 	f.prompt("/specrig:redgreen ./services/kostej")
 	st := f.h.load("s1")
-	if st.modeOf(f.svc) != "redgreen" || st.modeOf(f.other) != none {
+	if st.modeOf(f.svc) != "redgreen" || st.modeOf(f.other) != unswitched {
 		t.Errorf("state %+v", st)
 	}
 }
@@ -147,7 +146,6 @@ func TestEditIsCheckedInTheSessionsMode(t *testing.T) {
 }
 
 const rules = `{"specrig":"rules/1","modes":[` +
-	`{"name":"none","opens":["tests","production"],"offered":false,"allows":"anything but the cases","brief":"No mode is on."},` +
 	`{"name":"spec","opens":["cases"],"allows":"the cases","brief":"Write the cases, stop."},` +
 	`{"name":"redgreen","opens":["tests","production"],"allows":"the steps and the code","brief":"Make them green, stop."}],` +
 	`"classes":[{"name":"cases","patterns":["tests/feature/**/*.feature"]},{"name":"tests","patterns":["tests/"]},{"name":"production"}],` +
@@ -212,12 +210,10 @@ func TestACopyInATemporaryDirectoryIsNotChecked(t *testing.T) {
 	}
 }
 
-func TestWithNoModeEveryServiceIsCheckedAsNone(t *testing.T) {
+func TestWithNoModeSwitchedEveryServiceIsInRedgreen(t *testing.T) {
 	f := newFixture(t, allowing)
-	f.prompt("/specrig:spec ./services/kostej")
-	f.prompt("/specrig:none")
 	f.edit(filepath.Join(f.other, "src", "Orders.cs"))
-	if want := f.other + " guard none " + filepath.Join(f.other, "src", "Orders.cs"); f.last() != want {
+	if want := f.other + " guard redgreen " + filepath.Join(f.other, "src", "Orders.cs"); f.last() != want {
 		t.Errorf("asked %q, want %q", f.last(), want)
 	}
 }
@@ -329,6 +325,26 @@ func TestAGuardWithNoModesIsWarnedAboutOnceAndNeverBlocks(t *testing.T) {
 	}
 	if second != nil {
 		t.Errorf("second = %+v", second)
+	}
+}
+
+// redgreen is also where every service is with no task, so its name alone does not
+// tell the agent whether the specification was approved.
+func TestSwitchingToRedgreenSaysWhetherItIsTheApproval(t *testing.T) {
+	f := newFixture(t, allowing)
+	f.prompt("/specrig:spec ./services/shark")
+	if out := f.prompt("/specrig:redgreen"); !strings.Contains(out, "This switch is the approval") {
+		t.Errorf("from spec mode:\n%s", out)
+	}
+	if out := f.prompt("/specrig:redgreen ./services/kostej"); !strings.Contains(out, "This switch is not an approval") {
+		t.Errorf("with no task:\n%s", out)
+	}
+}
+
+func TestSessionStartWithNoModeSaysNoTaskHasStarted(t *testing.T) {
+	f := newFixture(t, allowing)
+	if out := f.h.sessionStart(input{SessionID: "s1", Cwd: f.root}); !strings.Contains(out, "No mode is switched on: every service is in redgreen") {
+		t.Errorf("context:\n%s", out)
 	}
 }
 

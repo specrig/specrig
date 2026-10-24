@@ -11,8 +11,6 @@ import (
 	"strings"
 )
 
-const None = "none"
-
 // Document is rules/1 as a stack's tool prints it.
 type Document struct {
 	Specrig string  `json:"specrig"`
@@ -200,15 +198,16 @@ func (r Rules) Check(mode Mode, abs string, granted []string) (Verdict, []string
 		for _, m := range a.Grant {
 			if mode.actsAs(m) {
 				m = mode.Name
+			} else if !r.offered(m) {
+				continue
 			}
-			ways = append(ways, fmt.Sprintf("the %s grant in %s mode", a.Name, m))
+			if way := fmt.Sprintf("the %s grant in %s mode", a.Name, m); !slices.Contains(ways, way) {
+				ways = append(ways, way)
+			}
 		}
 	}
 	if len(ways) == 0 {
 		return Refused, ways, fmt.Sprintf("%s is in the %s area, which no mode opens", shown, a.Name)
-	}
-	if mode.Name == None {
-		return Refused, ways, fmt.Sprintf("%s is edited only in %s — stop and ask the human for it", shown, strings.Join(ways, ", or "))
 	}
 	return Refused, ways, fmt.Sprintf("%s mode does not allow %s; %s does — stop and ask the human for it",
 		mode.Name, shown, strings.Join(ways, ", or "))

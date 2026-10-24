@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	none   = "none"
-	prefix = "/specrig:"
+	unswitched = "redgreen"
+	prefix     = "/specrig:"
 )
 
 type hook struct {
@@ -40,8 +40,8 @@ func (h hook) inScratch(path string) bool {
 	return false
 }
 
-// One mode holds for every service the task names; a service it stops naming is
-// back to none.
+// One mode holds for every service the task names, and the rest are closed while
+// it is on.
 type state struct {
 	Mode string `json:"mode"`
 	// The services the last command named by path. A command naming none acts
@@ -55,7 +55,7 @@ func (s state) modeOf(svc string) string {
 	if s.Mode != "" && slices.Contains(s.Services, svc) {
 		return s.Mode
 	}
-	return none
+	return unswitched
 }
 
 func (h hook) sessionStart(in input) string {
@@ -67,6 +67,8 @@ func (h hook) sessionStart(in input) string {
 	st := h.load(in.SessionID)
 	if st.Mode != "" && len(st.Services) > 0 {
 		fmt.Fprintf(&b, "Current mode: %s, for %s.\n", st.Mode, h.names(in.Cwd, st.Services))
+	} else {
+		fmt.Fprintf(&b, "No mode is switched on: every service is in %s, and no Rule #11 task has started.\n", unswitched)
 	}
 	if len(st.Granted) > 0 {
 		fmt.Fprintf(&b, "Granted: %s.\n", strings.Join(st.Granted, ", "))
@@ -132,6 +134,11 @@ func (h hook) prompt(in input) string {
 		switch v {
 		case service.OK:
 			switched = true
+			if command == unswitched && st.modeOf(svc) == "spec" {
+				text += "\nThis switch is the approval of the specification handed over in spec mode."
+			} else if command == unswitched {
+				text += "\nThis switch is not an approval: the service was not in spec mode."
+			}
 			fmt.Fprintf(&b, "%s:\n%s\n\n", name, text)
 		case service.NoModes:
 			fmt.Fprintf(&b, "%s: its guard has no modes yet, so edits there are not checked (%s).\n\n", name, text)
@@ -144,10 +151,6 @@ func (h hook) prompt(in input) string {
 	}
 	st.Mode, st.Services, st.Granted = command, services, nil
 	h.save(in.SessionID, st)
-	if command == none {
-		return fmt.Sprintf("The human switched off the mode: every service is in none, and nothing is granted.\n\n%s",
-			b.String())
-	}
 	return fmt.Sprintf("The human switched to %s mode, for %s; every other service is closed while it is on, "+
 		"and nothing is granted.\n\n%s", command, h.names(in.Cwd, services), b.String())
 }
@@ -157,7 +160,7 @@ func (h hook) prompt(in input) string {
 func (h hook) allow(in input, st *state, services, rest []string) string {
 	mode := st.Mode
 	if mode == "" {
-		mode = none
+		mode = unswitched
 	}
 	area := ""
 	if len(rest) > 0 {
@@ -222,7 +225,7 @@ func (h hook) edit(in input) *decision {
 	// of its areas claims the path.
 	asked := st.Services
 	if svc := service.Of(filepath.Dir(path)); svc != "" {
-		if st.Mode != "" && st.Mode != none && !slices.Contains(st.Services, svc) {
+		if st.Mode != "" && !slices.Contains(st.Services, svc) {
 			return &decision{HookSpecificOutput: &denial{
 				HookEventName:      "PreToolUse",
 				PermissionDecision: "deny",
@@ -235,11 +238,7 @@ func (h hook) edit(in input) *decision {
 	}
 	var warn []string
 	for _, svc := range asked {
-		var granted []string
-		if st.modeOf(svc) != none {
-			granted = st.Granted
-		}
-		switch v, text := h.guard(in.SessionID).Check(svc, st.modeOf(svc), path, granted); v {
+		switch v, text := h.guard(in.SessionID).Check(svc, st.modeOf(svc), path, st.Granted); v {
 		case service.Refused:
 			how := ". The human switches with " + prefix + "<mode>" + argument(in.Cwd, svc)
 			if strings.Contains(text, " grant ") {
