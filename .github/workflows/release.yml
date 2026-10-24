@@ -17,7 +17,8 @@ jobs:
           go-version: "1.24"
       - run: make test
       - name: the tag is the plugin's version
-        run: test "v$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' .claude-plugin/plugin.json)" = "$GITHUB_REF_NAME"
+        run: |
+          test "v$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' .claude-plugin/plugin.json)" = "$GITHUB_REF_NAME"
       - run: make release
       - run: gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --notes "specrig-hook ${GITHUB_REF_NAME#v}"
         env:
